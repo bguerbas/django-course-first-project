@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from utils.recipes import make_recipe
+from utils.recipes.factory import make_recipe
 
 
 def home(request):
