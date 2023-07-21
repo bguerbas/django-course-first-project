@@ -1,11 +1,10 @@
-from django.test import TestCase
 from django.urls import reverse, resolve
 from recipes import views
-from recipes.models import Recipe, Category, User
+from .test_recipe_base import RecipeTestBase
 
 
 # resolve -> qual função está sendo usada para renderizar a página
-class RecipeViewsTest(TestCase):
+class RecipeViewsTest(RecipeTestBase):
     def test_recipe_home_view_function_is_correct(self):
         # mesma coisa -> resolve('/'), porém se a url mudar,
         # o teste continua funcionando.
@@ -31,29 +30,18 @@ class RecipeViewsTest(TestCase):
             response.content.decode('utf-8'))
 
     def test_recipe_home_template_loads_recipes(self):
-        category = Category.objects.create(name='Category')
-        author = User.objects.create_user(
-            first_name='user',
-            last_name='user',
-            username='user',
-            password='23456',
-            email='user@email.com')
-        recipe = Recipe.objects.create(
-            title='Title',
-            description='Description',
-            slug='recipe-slug',
-            preparation_time=10,
-            preparation_time_unit='Minutos',
-            servings=5,
-            servings_unit='Porções',
-            preparation_steps='Recipe Preparation Steps',
-            preparation_steps_is_html=False,
-            is_published=True,
-            category=category,
-            author=author)
+        # Need a recipe for this test
+        self.make_recipe(category_data={'name': 'Breakfast'})
         response = self.client.get(reverse('recipes-home'))
-        response_recipe = response.context['recipes'].first()
-        self.assertEqual(response_recipe.title, recipe.title)
+        response_context = response.context['recipes']
+        content = response.content.decode('utf-8')
+
+        # Check if one recipe is loaded
+        self.assertIn('Recipe Title', content)
+        self.assertIn('10 Minutos', content)
+        self.assertIn('5 Porções', content)
+        self.assertIn('Breakfast', content)
+        self.assertEqual(len(response_context), 1)
 
     def test_recipe_category_view_function_is_correct(self):
         view = resolve(reverse('recipes-category', kwargs={'category_id': 1}))
